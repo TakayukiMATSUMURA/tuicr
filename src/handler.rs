@@ -1187,6 +1187,7 @@ pub fn handle_comment_action(app: &mut App, action: Action) {
             | Action::DeleteChar
             | Action::DeleteWord
             | Action::ClearLine
+            | Action::KillLine
             | Action::TextCursorLeft
             | Action::TextCursorRight
             | Action::TextCursorLineStart
@@ -1247,6 +1248,14 @@ pub fn handle_comment_action(app: &mut App, action: Action) {
         Action::ClearLine => {
             app.comment_buffer.clear();
             app.comment_cursor = 0;
+        }
+        Action::KillLine => {
+            let end = match comment_line_end(&app.comment_buffer, app.comment_cursor) {
+                end if end == app.comment_cursor => next_char_boundary(&app.comment_buffer, end),
+                end => end,
+            };
+            app.comment_buffer
+                .replace_range(app.comment_cursor..end, "");
         }
         Action::Quit => app.should_quit = true,
         _ => {}

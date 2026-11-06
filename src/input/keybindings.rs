@@ -78,6 +78,7 @@ pub enum Action {
     DeleteChar,
     DeleteWord,
     ClearLine,
+    KillLine,
     SubmitInput,
     CompleteCommand,
     CompleteCommandReverse,
@@ -370,12 +371,11 @@ fn map_comment_mode(key: KeyEvent) -> Action {
         // - Shift+Enter: works when Kitty keyboard protocol is active (modern terminals)
         // - Alt+Enter:   works in tmux even with vim-tmux-navigator (ESC CR, not intercepted)
         // - Ctrl+J:      works in terminals without tmux (0x0A → Char('j')+CONTROL)
-        // - Ctrl+K:      works without vim-tmux-navigator, intercepted when navigator is active
-        // vim-tmux-navigator binds C-j (down) and C-k (up), so Alt-Enter is the reliable tmux key.
+        // vim-tmux-navigator binds C-j (down), so Alt-Enter is the reliable tmux key.
         (KeyCode::Enter, mods) if mods.contains(KeyModifiers::SHIFT) => Action::InsertChar('\n'),
         (KeyCode::Enter, mods) if mods.contains(KeyModifiers::ALT) => Action::InsertChar('\n'),
         (KeyCode::Char('j'), KeyModifiers::CONTROL) => Action::InsertChar('\n'),
-        (KeyCode::Char('k'), KeyModifiers::CONTROL) => Action::InsertChar('\n'),
+        (KeyCode::Char('k'), KeyModifiers::CONTROL) => Action::KillLine,
         // Comment type: Tab to cycle (match any modifier so terminals that
         // report Tab with unexpected flags still work; Shift+Tab comes in as
         // BackTab via the second arm).
@@ -1091,6 +1091,12 @@ mod tests {
     fn should_map_backtab_to_reverse_comment_type_in_comment_mode() {
         let action = map_comment_mode(KeyEvent::new(KeyCode::BackTab, KeyModifiers::SHIFT));
         assert_eq!(action, Action::CycleCommentTypeReverse);
+    }
+
+    #[test]
+    fn should_map_ctrl_k_to_kill_line_in_comment_mode() {
+        let ctrl_k = KeyEvent::new(KeyCode::Char('k'), KeyModifiers::CONTROL);
+        assert_eq!(map_comment_mode(ctrl_k), Action::KillLine);
     }
 
     #[test]
