@@ -7,8 +7,6 @@ pub enum Action {
     // Navigation
     CursorDown(usize),
     CursorUp(usize),
-    HalfPageDown,
-    HalfPageUp,
     PageDown,
     PageUp,
     GoToTop,
@@ -25,8 +23,6 @@ pub enum Action {
     PendingLeaderCommand,
     ScrollLeft(usize),
     ScrollRight(usize),
-    ScrollViewDown(usize),
-    ScrollViewUp(usize),
     MouseScrollUp(usize),
     MouseScrollDown(usize),
 
@@ -256,19 +252,13 @@ fn map_normal_mode_with_q_quits(key: KeyEvent, leader_key: char, q_quits: bool) 
             Action::PendingLeaderCommand
         }
 
-        // Cursor movement (vim-like: cursor moves, scroll follows when needed)
-        (KeyCode::Char('j') | KeyCode::Down, KeyModifiers::NONE) => Action::CursorDown(1),
-        (KeyCode::Char('k') | KeyCode::Up, KeyModifiers::NONE) => Action::CursorUp(1),
-        (KeyCode::Char('e'), KeyModifiers::CONTROL) => Action::ScrollViewDown(1),
-        (KeyCode::Char('y'), KeyModifiers::CONTROL) => Action::ScrollViewUp(1),
-        (KeyCode::Char('d'), KeyModifiers::CONTROL) => Action::HalfPageDown,
-        (KeyCode::Char('u'), KeyModifiers::CONTROL) => Action::HalfPageUp,
-        (KeyCode::Char('f'), KeyModifiers::CONTROL) => Action::PageDown,
-        (KeyCode::Char('b'), KeyModifiers::CONTROL) => Action::PageUp,
+        // Cursor movement (cursor moves, scroll follows when needed)
+        (KeyCode::Down, KeyModifiers::NONE) => Action::CursorDown(1),
+        (KeyCode::Up, KeyModifiers::NONE) => Action::CursorUp(1),
         (KeyCode::PageDown, KeyModifiers::NONE) => Action::PageDown,
         (KeyCode::PageUp, KeyModifiers::NONE) => Action::PageUp,
-        (KeyCode::Char('g'), KeyModifiers::NONE) => Action::GoToTop,
-        (KeyCode::Char('G'), _) => Action::GoToBottom,
+        (KeyCode::Char('<'), mods) if mods.contains(KeyModifiers::ALT) => Action::GoToTop,
+        (KeyCode::Char('>'), mods) if mods.contains(KeyModifiers::ALT) => Action::GoToBottom,
         (KeyCode::Char('z'), KeyModifiers::NONE) => Action::PendingZCommand,
         (KeyCode::Char('Z'), _) => Action::PendingShiftZCommand,
 
@@ -289,8 +279,8 @@ fn map_normal_mode_with_q_quits(key: KeyEvent, leader_key: char, q_quits: bool) 
         (KeyCode::Enter, KeyModifiers::SHIFT) => Action::SelectFileFull,
 
         // Horizontal scrolling
-        (KeyCode::Char('h') | KeyCode::Left, KeyModifiers::NONE) => Action::ScrollLeft(4),
-        (KeyCode::Char('l') | KeyCode::Right, KeyModifiers::NONE) => Action::ScrollRight(4),
+        (KeyCode::Left, KeyModifiers::NONE) => Action::ScrollLeft(4),
+        (KeyCode::Right, KeyModifiers::NONE) => Action::ScrollRight(4),
 
         // Review actions
         (KeyCode::Char('r'), KeyModifiers::NONE) => Action::ToggleReviewed,
@@ -452,18 +442,14 @@ fn map_help_mode(key: KeyEvent) -> Action {
         | (KeyCode::Char('q'), KeyModifiers::NONE)
         | (KeyCode::Char('?'), _) => Action::ToggleHelp,
         // Scroll navigation
-        (KeyCode::Char('j') | KeyCode::Down, KeyModifiers::NONE) => Action::CursorDown(1),
-        (KeyCode::Char('k') | KeyCode::Up, KeyModifiers::NONE) => Action::CursorUp(1),
-        (KeyCode::Char('h') | KeyCode::Left, KeyModifiers::NONE) => Action::ScrollLeft(4),
-        (KeyCode::Char('l') | KeyCode::Right, KeyModifiers::NONE) => Action::ScrollRight(4),
-        (KeyCode::Char('d'), KeyModifiers::CONTROL) => Action::HalfPageDown,
-        (KeyCode::Char('u'), KeyModifiers::CONTROL) => Action::HalfPageUp,
-        (KeyCode::Char('f'), KeyModifiers::CONTROL) => Action::PageDown,
-        (KeyCode::Char('b'), KeyModifiers::CONTROL) => Action::PageUp,
+        (KeyCode::Down, KeyModifiers::NONE) => Action::CursorDown(1),
+        (KeyCode::Up, KeyModifiers::NONE) => Action::CursorUp(1),
+        (KeyCode::Left, KeyModifiers::NONE) => Action::ScrollLeft(4),
+        (KeyCode::Right, KeyModifiers::NONE) => Action::ScrollRight(4),
         (KeyCode::PageDown, KeyModifiers::NONE) => Action::PageDown,
         (KeyCode::PageUp, KeyModifiers::NONE) => Action::PageUp,
-        (KeyCode::Char('g'), KeyModifiers::NONE) => Action::GoToTop,
-        (KeyCode::Char('G'), _) => Action::GoToBottom,
+        (KeyCode::Char('<'), mods) if mods.contains(KeyModifiers::ALT) => Action::GoToTop,
+        (KeyCode::Char('>'), mods) if mods.contains(KeyModifiers::ALT) => Action::GoToBottom,
         (KeyCode::Char('/'), _) => Action::EnterSearchMode,
         (KeyCode::Char('n'), KeyModifiers::NONE) => Action::SearchNext,
         (KeyCode::Char('N'), _) => Action::SearchPrev,
@@ -476,18 +462,14 @@ fn map_summary_mode(key: KeyEvent) -> Action {
         (KeyCode::Esc, KeyModifiers::NONE) | (KeyCode::Char('q'), KeyModifiers::NONE) => {
             Action::ExitMode
         }
-        (KeyCode::Char('j') | KeyCode::Down, KeyModifiers::NONE) => Action::CursorDown(1),
-        (KeyCode::Char('k') | KeyCode::Up, KeyModifiers::NONE) => Action::CursorUp(1),
+        (KeyCode::Down, KeyModifiers::NONE) => Action::CursorDown(1),
+        (KeyCode::Up, KeyModifiers::NONE) => Action::CursorUp(1),
         (KeyCode::Enter, KeyModifiers::NONE) => Action::SubmitInput,
         (KeyCode::Char('d'), KeyModifiers::NONE) => Action::PendingDCommand,
-        (KeyCode::Char('d'), KeyModifiers::CONTROL) => Action::HalfPageDown,
-        (KeyCode::Char('u'), KeyModifiers::CONTROL) => Action::HalfPageUp,
-        (KeyCode::Char('f'), KeyModifiers::CONTROL) => Action::PageDown,
-        (KeyCode::Char('b'), KeyModifiers::CONTROL) => Action::PageUp,
         (KeyCode::PageDown, KeyModifiers::NONE) => Action::PageDown,
         (KeyCode::PageUp, KeyModifiers::NONE) => Action::PageUp,
-        (KeyCode::Char('g'), KeyModifiers::NONE) => Action::GoToTop,
-        (KeyCode::Char('G'), _) => Action::GoToBottom,
+        (KeyCode::Char('<'), mods) if mods.contains(KeyModifiers::ALT) => Action::GoToTop,
+        (KeyCode::Char('>'), mods) if mods.contains(KeyModifiers::ALT) => Action::GoToBottom,
         _ => Action::None,
     }
 }
@@ -502,8 +484,8 @@ fn map_confirm_mode(key: KeyEvent) -> Action {
 
 fn map_submit_resolver_mode(key: KeyEvent) -> Action {
     match (key.code, key.modifiers) {
-        (KeyCode::Char('j') | KeyCode::Down, KeyModifiers::NONE) => Action::SubmitResolverDown,
-        (KeyCode::Char('k') | KeyCode::Up, KeyModifiers::NONE) => Action::SubmitResolverUp,
+        (KeyCode::Down, KeyModifiers::NONE) => Action::SubmitResolverDown,
+        (KeyCode::Up, KeyModifiers::NONE) => Action::SubmitResolverUp,
         (KeyCode::Enter, KeyModifiers::NONE) => Action::SubmitResolverToggle,
         (KeyCode::Char(' '), KeyModifiers::NONE) => Action::SubmitResolverToggle,
         (KeyCode::Char('s'), KeyModifiers::NONE) => Action::SubmitResolverAdvance,
@@ -528,8 +510,8 @@ fn map_submit_action_picker_mode(key: KeyEvent) -> Action {
 
 fn map_submit_action_picker_mode_with_q_quits(key: KeyEvent, q_quits: bool) -> Action {
     match (key.code, key.modifiers) {
-        (KeyCode::Char('j') | KeyCode::Down, KeyModifiers::NONE) => Action::SubmitPickerDown,
-        (KeyCode::Char('k') | KeyCode::Up, KeyModifiers::NONE) => Action::SubmitPickerUp,
+        (KeyCode::Down, KeyModifiers::NONE) => Action::SubmitPickerDown,
+        (KeyCode::Up, KeyModifiers::NONE) => Action::SubmitPickerUp,
         (KeyCode::Enter, KeyModifiers::NONE) => Action::SubmitPickerConfirm,
         (KeyCode::Esc, KeyModifiers::NONE) => Action::ExitMode,
         (KeyCode::Char('q'), KeyModifiers::NONE) => q_action(q_quits),
@@ -544,8 +526,8 @@ fn map_commit_select_mode(key: KeyEvent) -> Action {
 
 fn map_commit_select_mode_with_q_quits(key: KeyEvent, q_quits: bool) -> Action {
     match (key.code, key.modifiers) {
-        (KeyCode::Char('j') | KeyCode::Down, KeyModifiers::NONE) => Action::CommitSelectDown,
-        (KeyCode::Char('k') | KeyCode::Up, KeyModifiers::NONE) => Action::CommitSelectUp,
+        (KeyCode::Down, KeyModifiers::NONE) => Action::CommitSelectDown,
+        (KeyCode::Up, KeyModifiers::NONE) => Action::CommitSelectUp,
         (KeyCode::Char(' '), KeyModifiers::NONE) => Action::ToggleCommitSelect,
         (KeyCode::Enter, KeyModifiers::NONE) => Action::ConfirmCommitSelect,
         (KeyCode::Esc, KeyModifiers::NONE) => Action::ExitMode,
@@ -629,8 +611,8 @@ fn map_theme_picker_mode(key: KeyEvent) -> Action {
     match (key.code, key.modifiers) {
         (KeyCode::Esc, KeyModifiers::NONE) => Action::ExitMode,
         (KeyCode::Enter, KeyModifiers::NONE) => Action::SubmitInput,
-        (KeyCode::Char('j') | KeyCode::Down, KeyModifiers::NONE) => Action::CursorDown(1),
-        (KeyCode::Char('k') | KeyCode::Up, KeyModifiers::NONE) => Action::CursorUp(1),
+        (KeyCode::Down, KeyModifiers::NONE) => Action::CursorDown(1),
+        (KeyCode::Up, KeyModifiers::NONE) => Action::CursorUp(1),
         (KeyCode::Char('/'), KeyModifiers::NONE) => Action::ThemePickerFilter,
         _ => Action::None,
     }
@@ -660,8 +642,8 @@ fn map_visual_mode(key: KeyEvent) -> Action {
 fn map_visual_mode_with_q_quits(key: KeyEvent, q_quits: bool) -> Action {
     match (key.code, key.modifiers) {
         // Extend selection
-        (KeyCode::Char('j') | KeyCode::Down, KeyModifiers::NONE) => Action::CursorDown(1),
-        (KeyCode::Char('k') | KeyCode::Up, KeyModifiers::NONE) => Action::CursorUp(1),
+        (KeyCode::Down, KeyModifiers::NONE) => Action::CursorDown(1),
+        (KeyCode::Up, KeyModifiers::NONE) => Action::CursorUp(1),
         (KeyCode::Char('c'), KeyModifiers::NONE) => Action::AddRangeComment,
         (KeyCode::Char('s'), KeyModifiers::NONE) => Action::AddRangeSuggestion,
         (KeyCode::Enter, KeyModifiers::NONE) => Action::AddRangeComment,
@@ -747,26 +729,23 @@ mod tests {
     }
 
     #[test]
-    fn should_keep_lowercase_h_panning_when_the_file_tree_is_focused() {
-        // `h`/`l` pan the tree horizontally; the tree must not claim them.
+    fn should_leave_vim_motion_letters_unbound() {
+        for c in ['j', 'k', 'h', 'l', 'g'] {
+            assert_eq!(
+                map_normal_mode(key(KeyCode::Char(c)), DEFAULT_LEADER_KEY),
+                Action::None,
+                "{c}"
+            );
+            assert_eq!(map_help_mode(key(KeyCode::Char(c))), Action::None, "{c}");
+        }
         assert_eq!(
-            map_file_tree_mode(key(KeyCode::Char('h')), DEFAULT_LEADER_KEY),
-            Action::ScrollLeft(4)
+            map_normal_mode(key_shift('G'), DEFAULT_LEADER_KEY),
+            Action::None
         );
     }
 
     #[test]
-    fn should_pan_the_help_popup_with_h_and_l() {
-        // Long descriptions are cut off on narrow terminals; `h`/`l` pan the
-        // popup the same way they pan the diff and the file tree.
-        assert_eq!(
-            map_help_mode(key(KeyCode::Char('h'))),
-            Action::ScrollLeft(4)
-        );
-        assert_eq!(
-            map_help_mode(key(KeyCode::Char('l'))),
-            Action::ScrollRight(4)
-        );
+    fn should_pan_the_help_popup_with_left_and_right() {
         assert_eq!(map_help_mode(key(KeyCode::Left)), Action::ScrollLeft(4));
         assert_eq!(map_help_mode(key(KeyCode::Right)), Action::ScrollRight(4));
     }
@@ -788,7 +767,7 @@ mod tests {
     #[test]
     fn should_delegate_unclaimed_keys_to_normal_mode_in_file_tree_mode() {
         for code in [
-            KeyCode::Char('j'),
+            KeyCode::Down,
             KeyCode::Char('r'),
             KeyCode::Char('c'),
             KeyCode::Char(' '),
@@ -871,9 +850,18 @@ mod tests {
     }
 
     #[test]
-    fn should_map_uppercase_g_to_go_to_bottom_in_normal_mode() {
-        let action = map_normal_mode(key_shift('G'), DEFAULT_LEADER_KEY);
-        assert_eq!(action, Action::GoToBottom);
+    fn should_map_meta_angle_brackets_to_top_and_bottom() {
+        for mods in [KeyModifiers::ALT, KeyModifiers::ALT | KeyModifiers::SHIFT] {
+            let top = KeyEvent::new(KeyCode::Char('<'), mods);
+            let bottom = KeyEvent::new(KeyCode::Char('>'), mods);
+            assert_eq!(map_normal_mode(top, DEFAULT_LEADER_KEY), Action::GoToTop);
+            assert_eq!(
+                map_normal_mode(bottom, DEFAULT_LEADER_KEY),
+                Action::GoToBottom
+            );
+            assert_eq!(map_help_mode(top), Action::GoToTop);
+            assert_eq!(map_summary_mode(bottom), Action::GoToBottom);
+        }
     }
 
     #[test]
@@ -890,7 +878,7 @@ mod tests {
     fn should_reuse_help_navigation_without_search_for_message_details() {
         assert_eq!(
             map_key_to_action(
-                key(KeyCode::Char('j')),
+                key(KeyCode::Down),
                 InputMode::MessageDetails,
                 DEFAULT_LEADER_KEY,
             ),
@@ -912,22 +900,9 @@ mod tests {
     fn should_map_summary_navigation_and_escape() {
         assert_eq!(map_summary_mode(key(KeyCode::Esc)), Action::ExitMode);
         assert_eq!(map_summary_mode(key(KeyCode::Char('q'))), Action::ExitMode);
-        assert_eq!(
-            map_summary_mode(key(KeyCode::Char('j'))),
-            Action::CursorDown(1)
-        );
-        assert_eq!(
-            map_summary_mode(key(KeyCode::Char('k'))),
-            Action::CursorUp(1)
-        );
+        assert_eq!(map_summary_mode(key(KeyCode::Down)), Action::CursorDown(1));
+        assert_eq!(map_summary_mode(key(KeyCode::Up)), Action::CursorUp(1));
         assert_eq!(map_summary_mode(key(KeyCode::Enter)), Action::SubmitInput);
-        assert_eq!(map_summary_mode(key_shift('G')), Action::GoToBottom);
-    }
-
-    #[test]
-    fn should_map_lowercase_g_to_go_to_top_in_normal_mode() {
-        let action = map_normal_mode(key(KeyCode::Char('g')), DEFAULT_LEADER_KEY);
-        assert_eq!(action, Action::GoToTop);
     }
 
     #[test]
@@ -940,15 +915,6 @@ mod tests {
     fn should_map_escape_to_clear_search_highlight_in_normal_mode() {
         let action = map_normal_mode(key(KeyCode::Esc), DEFAULT_LEADER_KEY);
         assert_eq!(action, Action::ClearSearchHighlight);
-    }
-
-    #[test]
-    fn should_keep_ctrl_e_as_scroll_down_in_normal_mode() {
-        let action = map_normal_mode(
-            KeyEvent::new(KeyCode::Char('e'), KeyModifiers::CONTROL),
-            DEFAULT_LEADER_KEY,
-        );
-        assert_eq!(action, Action::ScrollViewDown(1));
     }
 
     #[test]
@@ -998,8 +964,7 @@ mod tests {
 
     #[test]
     fn should_leave_other_l_chords_to_the_mode_maps() {
-        // Plain `l` scrolls right, and AltGr text (CONTROL | ALT) must still
-        // reach the text inputs.
+        // AltGr text (CONTROL | ALT) must still reach the text inputs.
         assert_eq!(map_global_key(key(KeyCode::Char('l'))), Action::None);
         assert_eq!(map_global_key(key_shift('L')), Action::None);
         assert_eq!(
@@ -1021,15 +986,9 @@ mod tests {
             map_summary_mode(key(KeyCode::Char('d'))),
             Action::PendingDCommand
         );
-        assert_eq!(
-            map_summary_mode(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::CONTROL)),
-            Action::HalfPageDown
-        );
+        assert_eq!(map_summary_mode(key(KeyCode::PageDown)), Action::PageDown);
         assert_eq!(map_summary_mode(key(KeyCode::Esc)), Action::ExitMode);
-        assert_eq!(
-            map_summary_mode(key(KeyCode::Char('j'))),
-            Action::CursorDown(1)
-        );
+        assert_eq!(map_summary_mode(key(KeyCode::Down)), Action::CursorDown(1));
         assert_eq!(map_summary_mode(key(KeyCode::Enter)), Action::SubmitInput);
     }
     #[test]
@@ -1145,11 +1104,11 @@ mod tests {
     #[test]
     fn should_preserve_modified_shortcuts_when_character_is_leader() {
         let action = map_key_to_action(
-            KeyEvent::new(KeyCode::Char('e'), KeyModifiers::CONTROL),
+            KeyEvent::new(KeyCode::Char('<'), KeyModifiers::ALT),
             InputMode::Normal,
-            'e',
+            '<',
         );
-        assert_eq!(action, Action::ScrollViewDown(1));
+        assert_eq!(action, Action::GoToTop);
     }
 
     #[test]

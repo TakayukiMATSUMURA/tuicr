@@ -579,8 +579,6 @@ pub fn handle_help_action(app: &mut App, action: Action) {
         Action::CursorUp(n) => app.help_scroll_up(n),
         Action::ScrollLeft(n) => app.help_scroll_left(n),
         Action::ScrollRight(n) => app.help_scroll_right(n),
-        Action::HalfPageDown => app.help_scroll_down(app.help_state.viewport_height / 2),
-        Action::HalfPageUp => app.help_scroll_up(app.help_state.viewport_height / 2),
         Action::PageDown => app.help_scroll_down(app.help_state.viewport_height),
         Action::PageUp => app.help_scroll_up(app.help_state.viewport_height),
         Action::GoToTop => app.help_scroll_to_top(),
@@ -605,12 +603,6 @@ pub fn handle_summary_action(app: &mut App, action: Action) {
     match action {
         Action::CursorDown(n) => app.summary_select_down(n),
         Action::CursorUp(n) => app.summary_select_up(n),
-        Action::HalfPageDown => {
-            app.summary_scroll_down(app.summary_state.viewport_height / 2);
-        }
-        Action::HalfPageUp => {
-            app.summary_scroll_up(app.summary_state.viewport_height / 2);
-        }
         Action::PageDown => app.summary_scroll_down(app.summary_state.viewport_height),
         Action::PageUp => app.summary_scroll_up(app.summary_state.viewport_height),
         Action::GoToTop => app.summary_select_first(),
@@ -1516,10 +1508,8 @@ pub fn handle_visual_action(app: &mut App, action: Action) {
         Action::ExitMode => app.exit_visual_mode(),
         Action::Quit => app.should_quit = true,
         Action::QuitHint => app.set_message(QUIT_HINT_MESSAGE),
-        Action::ScrollViewDown(n) | Action::MouseScrollDown(n) => app.scroll_view_down(n),
-        Action::ScrollViewUp(n) | Action::MouseScrollUp(n) => app.scroll_view_up(n),
-        Action::HalfPageDown => app.page_down(app.diff_state.viewport_height / 2),
-        Action::HalfPageUp => app.page_up(app.diff_state.viewport_height / 2),
+        Action::MouseScrollDown(n) => app.scroll_view_down(n),
+        Action::MouseScrollUp(n) => app.scroll_view_up(n),
         Action::PageDown => app.page_down(app.diff_state.viewport_height),
         Action::PageUp => app.page_up(app.diff_state.viewport_height),
         _ => {}
@@ -1678,8 +1668,6 @@ pub fn handle_diff_action(app: &mut App, action: Action) {
     match action {
         Action::CursorDown(n) => app.cursor_down(n),
         Action::CursorUp(n) => app.cursor_up(n),
-        Action::ScrollViewDown(n) => app.scroll_view_down(n),
-        Action::ScrollViewUp(n) => app.scroll_view_up(n),
         Action::ScrollLeft(n) => app.scroll_left(n),
         Action::ScrollRight(n) => app.scroll_right(n),
         Action::MouseScrollDown(n) => app.scroll_view_down(n),
@@ -1751,8 +1739,6 @@ fn handle_shared_normal_action(app: &mut App, action: Action) {
             app.show_file_list = false;
             app.focused_panel = FocusedPanel::Diff;
         }
-        Action::HalfPageDown => app.page_down(app.diff_state.viewport_height / 2),
-        Action::HalfPageUp => app.page_up(app.diff_state.viewport_height / 2),
         Action::PageDown => app.page_down(app.diff_state.viewport_height),
         Action::PageUp => app.page_up(app.diff_state.viewport_height),
         Action::GoToTop => app.jump_to_file(0),

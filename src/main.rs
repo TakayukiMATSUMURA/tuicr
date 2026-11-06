@@ -814,9 +814,7 @@ fn main() -> anyhow::Result<()> {
                                         Action::CursorDown(n)
                                         | Action::CursorUp(n)
                                         | Action::ScrollLeft(n)
-                                        | Action::ScrollRight(n)
-                                        | Action::ScrollViewDown(n)
-                                        | Action::ScrollViewUp(n) => {
+                                        | Action::ScrollRight(n) => {
                                             *n = n.saturating_mul(count);
                                         }
                                         Action::NextFile
