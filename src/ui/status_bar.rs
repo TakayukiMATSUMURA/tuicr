@@ -352,48 +352,48 @@ pub fn render_status_bar(frame: &mut Frame, app: &App, area: Rect) {
             // File-tree prompts are a sub-state of Normal, so the mode chip
             // still reads NORMAL; the hint is what tells the user Enter/Esc
             // are the way out.
-            Cow::Borrowed("   \u{21b5} apply \u{00b7} esc cancel")
+            Cow::Borrowed("   \u{21b5} apply \u{00b7} C-g cancel")
         } else if app.theme_picker_filtering() {
-            Cow::Borrowed("   \u{21b5} apply filter \u{00b7} esc cancel filter")
+            Cow::Borrowed("   \u{21b5} apply filter \u{00b7} C-g cancel filter")
         } else {
             match app.input_mode {
                 InputMode::Normal if app.focused_panel == FocusedPanel::FileList => Cow::Borrowed(
-                    "   j/k move \u{00b7} \u{21b5} open \u{00b7} i/e filter \u{00b7} I/E clear \u{00b7} / search \u{00b7} r reviewed",
+                    "   C-n/C-p move \u{00b7} \u{21b5} open \u{00b7} i/e filter \u{00b7} I/E clear \u{00b7} C-s search \u{00b7} r reviewed",
                 ),
                 InputMode::Normal => Cow::Borrowed(
-                    "   j/k scroll \u{00b7} {/} file \u{00b7} m/M comment \u{00b7} r file \u{00b7} R hunk \u{00b7} c comment \u{00b7} ? help",
+                    "   C-n/C-p scroll \u{00b7} {/} file \u{00b7} m/M comment \u{00b7} r file \u{00b7} R hunk \u{00b7} c comment \u{00b7} ? help",
                 ),
                 InputMode::Command => {
-                    Cow::Borrowed("   tab complete \u{00b7} \u{21b5} execute \u{00b7} esc cancel")
+                    Cow::Borrowed("   tab complete \u{00b7} \u{21b5} execute \u{00b7} C-g cancel")
                 }
-                InputMode::Search => Cow::Borrowed("   \u{21b5} search \u{00b7} esc cancel"),
+                InputMode::Search => Cow::Borrowed("   \u{21b5} search \u{00b7} C-g cancel"),
                 InputMode::Comment if !app.comment_vim_enabled => {
-                    Cow::Borrowed("   ↑/↓ row \u{00b7} ctrl-s save \u{00b7} esc cancel")
+                    Cow::Borrowed("   C-p/C-n row \u{00b7} ctrl-s save \u{00b7} C-g cancel")
                 }
-                InputMode::Comment => Cow::Borrowed("   ctrl-s save \u{00b7} esc cancel"),
-                InputMode::Help => Cow::Borrowed("   / search · n/N match · q/?/esc close"),
-                InputMode::MessageDetails => Cow::Borrowed("   j/k scroll · q/esc close"),
+                InputMode::Comment => Cow::Borrowed("   ctrl-s save \u{00b7} C-g cancel"),
+                InputMode::Help => Cow::Borrowed("   C-s search · C-s/C-r match · q/?/C-g close"),
+                InputMode::MessageDetails => Cow::Borrowed("   C-n/C-p scroll · q/C-g close"),
                 InputMode::Summary => {
-                    Cow::Borrowed("   j/k select · dd delete · ↵ jump · q/esc close")
+                    Cow::Borrowed("   C-n/C-p select · dd delete · ↵ jump · q/C-g close")
                 }
                 InputMode::Confirm => Cow::Borrowed("   y yes \u{00b7} n no"),
                 InputMode::CommitSelect => Cow::Borrowed(
-                    "   j/k navigate \u{00b7} space select \u{00b7} \u{21b5} confirm \u{00b7} esc back",
+                    "   C-n/C-p navigate \u{00b7} space select \u{00b7} \u{21b5} confirm \u{00b7} C-g back",
                 ),
                 InputMode::VisualSelect => Cow::Borrowed(
-                    "   j/k extend \u{00b7} c/\u{21b5} comment \u{00b7} s suggest \u{00b7} y yank \u{00b7} esc/V cancel",
+                    "   C-n/C-p extend \u{00b7} c/\u{21b5} comment \u{00b7} s suggest \u{00b7} y yank \u{00b7} C-g/C-SPC cancel",
                 ),
                 InputMode::SubmitResolver => Cow::Borrowed(
-                    "   j/k move \u{00b7} \u{21b5} toggle \u{00b7} s submit \u{00b7} esc cancel",
+                    "   C-n/C-p move \u{00b7} \u{21b5} toggle \u{00b7} s submit \u{00b7} C-g cancel",
                 ),
                 InputMode::SubmitConfirm => {
-                    Cow::Borrowed("   y submit \u{00b7} n cancel \u{00b7} esc cancel")
+                    Cow::Borrowed("   y submit \u{00b7} n cancel \u{00b7} C-g cancel")
                 }
                 InputMode::SubmitActionPicker => {
-                    Cow::Borrowed("   j/k move \u{00b7} \u{21b5} submit \u{00b7} esc cancel")
+                    Cow::Borrowed("   C-n/C-p move \u{00b7} \u{21b5} submit \u{00b7} C-g cancel")
                 }
                 InputMode::ThemePicker => Cow::Borrowed(
-                    "   j/k move \u{00b7} \u{21b5} apply \u{00b7} / filter \u{00b7} esc cancel",
+                    "   C-n/C-p move \u{00b7} \u{21b5} apply \u{00b7} C-s filter \u{00b7} C-g cancel",
                 ),
             }
         };
