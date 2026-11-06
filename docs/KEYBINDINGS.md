@@ -2,27 +2,30 @@
 
 Full reference. Press `?` inside tuicr for an in-app version of this list.
 
+Keys use Emacs notation: `C-n` is Ctrl+n, `M-x` is Meta (Option/Alt)+x, and `C-SPC`
+is Ctrl+Space. `M-` keys need the terminal to send Option/Alt as Meta. `C-g` works
+wherever `Esc` does.
+
 `<leader>` defaults to `;`. Override it with `leader = ","` in `~/.config/tuicr/config.toml`.
 
 ## Navigation
 
 | Key | Action |
 |-----|--------|
-| `j` / `↓` | Scroll down |
-| `k` / `↑` | Scroll up |
-| `h` / `←` | Scroll left |
-| `l` / `→` | Scroll right |
-| `Ctrl-d` / `Ctrl-u` | Half page down / up |
-| `Ctrl-f` / `Ctrl-b` | Full page down / up |
-| `g` / `G` | Go to first / last file |
-| `{N}G` | Go to source line N in current file |
-| `{N}{motion}` | Vim-style count prefix — repeats `j` / `k` / `h` / `l` / `{` / `}` / `[` / `]` `N` times |
+| `C-n` / `↓` | Scroll down |
+| `C-p` / `↑` | Scroll up |
+| `C-b` / `←` | Scroll left |
+| `C-f` / `→` | Scroll right |
+| `C-v` / `M-v` | Page down / up (also `PageDown` / `PageUp`) |
+| `M-<` / `M->` | Go to first / last file |
+| `{N}M->` | Go to source line N in current file |
+| `{N}{motion}` | Count prefix — repeats `C-n` / `C-p` / `C-b` / `C-f` / `{` / `}` / `[` / `]` `N` times |
 | `{` / `}` | Jump to previous / next file |
 | `[` / `]` | Jump to previous / next hunk |
 | `m` / `M` | Jump to next / previous comment |
-| `/` | Search within diff (case-insensitive regex); matches on diff content are highlighted and the status bar shows the `[current/total]` position (headers, comments, and PR info are searchable but not highlighted) |
-| `n` / `N` | Next / previous search match (wraps around) |
-| `Esc` | Clear search-match highlighting; the pattern is kept so `n` / `N` still work |
+| `C-s` | Search within diff (case-insensitive regex); matches on diff content are highlighted and the status bar shows the `[current/total]` position (headers, comments, and PR info are searchable but not highlighted) |
+| `C-s` / `C-r` | Next / previous search match while matches are highlighted (wraps around) |
+| `C-g` / `Esc` | Clear search-match highlighting; the next `C-s` starts a new search |
 | `Enter` | Expand or collapse hidden context between hunks |
 | `zt` | Scroll cursor to top of screen |
 | `zz` | Center cursor on screen |
@@ -36,15 +39,21 @@ whenever the terminal reports a resize.
 
 ## Diff search
 
-Diff `/` search uses the Rust `regex` syntax, case-insensitively by default,
+`C-s` opens the search prompt. Type a pattern and press `Enter` or `C-s` to jump
+to the first match after the cursor. While matches are highlighted, `C-s` and `C-r`
+step to the next and previous match. `C-g` clears the highlight, so the next `C-s`
+opens the prompt again. With nothing highlighted, `C-r` opens the same prompt and
+searches forward.
+
+Diff search uses the Rust `regex` syntax, case-insensitively by default,
 like the file-tree include/exclude filters. For example, `foo|bar` matches either
 word, `^fn\s+` finds function declarations, and `foo\.bar` matches a literal dot.
 Plain-text searches keep their existing Unicode case folding. The same compiled
 pattern drives navigation and highlighting in both diff layouts; side-by-side
 columns are matched independently. Zero-width matches (such as `^`) are navigable
 but have no characters to highlight. An invalid expression reports an error
-without moving the cursor or replacing the previous valid search; `n` / `N` can
-still repeat that search. File-tree and help `/` searches remain text searches.
+without moving the cursor or replacing the previous valid search. File-tree and
+help searches remain text searches.
 
 ## Help
 
@@ -52,10 +61,12 @@ Press `?` to open help.
 
 | Key | Action |
 |-----|--------|
-| `/` | Search within help (case-insensitive) |
-| `n` / `N` | Next / previous help search match |
-| `j` / `k` | Scroll down / up |
-| `q` / `?` / `Esc` | Close help |
+| `C-s` | Search within help (case-insensitive); next match once a search has matched |
+| `C-r` | Previous help search match |
+| `C-n` / `C-p` | Scroll down / up |
+| `q` / `?` / `C-g` / `Esc` | Close help |
+
+Reopening help starts a fresh search.
 
 ## File tree
 
@@ -69,11 +80,12 @@ Press `?` to open help.
 | `e` | Filter out files matching a regex (exclude) |
 | `I` | Clear the include filter |
 | `E` | Clear the exclude filter |
-| `/` | Search file paths (substring) |
-| `n` / `N` | Next / previous file-path match |
+| `C-s` | Search file paths (substring); next match while a search is active |
+| `C-r` | Previous file-path match |
+| `C-g` | End the file-path search |
 
 These keys are only active while the file tree is focused — in the diff, `i` still
-edits the comment at the cursor and `/` still searches the diff.
+edits the comment at the cursor and `C-s` still searches the diff.
 
 ### Filtering
 
@@ -86,7 +98,7 @@ pane, from `{`/`}` file navigation, `[`/`]` hunk navigation, and from the file
 and `+/-` counts in the header. The tree title reports how much is hidden
 (`Files · 2/12 · 12 of 58`), and the active patterns show in its bottom border.
 
-Enter applies, `Esc` cancels, `Ctrl-u` clears the line. Reopening a prompt
+Enter applies, `C-g` (or `Esc`) cancels, `Ctrl-u` clears the line. Reopening a prompt
 pre-fills the pattern already applied, so submitting an emptied buffer is the
 same as `I` / `E`. An invalid regex reports the error and leaves the prompt open
 so it can be fixed. Comments on hidden files are not deleted and still export —
@@ -99,9 +111,9 @@ when tuicr restarts, but they survive a `:e` reload.
 
 `:set noreviewed` / `:set reviewed` / `:set reviewed!` (or the bare `:reviewed`)
 hide or show files already marked reviewed with `r`. There is deliberately no
-single-key binding: `H` is a vim motion, and this is a command-only feature. Like
+single-key binding: this is a command-only feature. Like
 `i` / `e`, hidden files leave the tree, the diff pane, `{`/`}` and `[`/`]`
-navigation, `/` search, and the `+/-` counts in the header — so the header reports
+navigation, search, and the `+/-` counts in the header — so the header reports
 the diff still left to review.
 
 Two things stay deliberately unaffected. The tree title keeps counting reviewed
@@ -117,9 +129,10 @@ Start a session with them hidden via `show_reviewed = false` in `config.toml`.
 
 ### Search
 
-`/` moves only the tree selection to the next matching path, expanding collapsed
+`C-s` moves only the tree selection to the next matching path, expanding collapsed
 parents as needed, and leaves the diff viewport where it was — press `Enter` to
-jump the diff there. `n` / `N` step matches and wrap around. Search only ever
+jump the diff there. `C-s` / `C-r` step matches and wrap around. `C-g` (or
+submitting an empty prompt) ends the search, so the next `C-s` opens a new prompt. Search only ever
 considers files that pass the active filters.
 
 ## Panel focus
@@ -142,8 +155,8 @@ Shown below the file tree when local comments or visible remote PR threads exist
 
 | Key | Action |
 |-----|--------|
-| `j` / `k` | Move selection |
-| `h` / `l` | Scroll rows left / right |
+| `C-n` / `C-p` | Move selection |
+| `C-b` / `C-f` | Scroll rows left / right |
 | `Enter` | Jump to selected comment |
 
 ## Review actions
@@ -155,7 +168,7 @@ Shown below the file tree when local comments or visible remote PR threads exist
 | `c` | Add line comment (or file comment if not on a diff line) |
 | `C` | Add file comment |
 | `<leader>c` | Add review comment |
-| `v` / `V` | Enter visual mode for range comments |
+| `C-SPC` | Enter visual mode for range comments |
 | `dd` | Delete comment at cursor |
 | `i` | Edit comment at cursor (vim: text cursor at start) |
 | `A` | Edit comment at cursor with text cursor at end (vim mode only) |
@@ -183,10 +196,10 @@ from the checkout, never copied.
 
 | Key | Action |
 |-----|--------|
-| `j` / `k` | Extend selection down / up |
+| `C-n` / `C-p` | Extend selection down / up |
 | `c` / `Enter` | Create comment for selected range |
 | `s` | Start an editable suggestion prefilled with the selected code lines |
-| `Esc` / `v` / `V` | Cancel selection |
+| `C-g` / `Esc` / `C-SPC` | Cancel selection |
 
 Suggestions replace whole lines on the new side of a single diff hunk. Selections
 across gaps (including deleted-only rows) or expanded context are rejected.
@@ -200,16 +213,18 @@ GitLab suggestions can include at most 100 lines above the final selected line.
 | `Tab` / `Shift-Tab` | Cycle comment type forward / backward (per `comment_types` order) |
 | `Enter` / `Ctrl-Enter` / `Ctrl-s` | Save comment |
 | `Shift-Enter` / `Ctrl-j` | Insert newline |
-| `←` / `→` | Move cursor left / right |
-| `↑` / `↓` | Move cursor up / down one displayed row (default editor) |
+| `C-b` / `C-f` / `←` / `→` | Move cursor left / right |
+| `C-p` / `C-n` / `↑` / `↓` | Move cursor up / down one displayed row (default editor) |
+| `Ctrl-a` / `Ctrl-e` | Move to line start / end |
+| `C-k` | Delete to the end of the line (at the end, join the next line) |
 | `Ctrl-w` / `Alt-Backspace` / `Cmd-Backspace` | Delete word |
 | `Ctrl-u` | Clear line |
-| `Esc` / `Ctrl-c` | Cancel |
+| `C-g` / `Esc` / `Ctrl-c` | Cancel |
 
-In the default editor, Up/Down move through wrapped rows and explicit newlines.
+In the default editor, `C-p` / `C-n` move through wrapped rows and explicit newlines.
 The cursor keeps its column where possible and restores it after crossing a
 shorter row. Horizontal movement or editing sets the column for subsequent
-vertical movement. Up/Down stop at the first or last row.
+vertical movement. `C-p` / `C-n` stop at the first or last row.
 
 With `comment_vim = true` the box uses [`edtui`](https://github.com/preiter93/edtui)
 modal editing (Normal/Insert/Visual: `hjkl`, `w`/`b`/`e`, `dd`/`D`/`ciw`/`x`,
@@ -224,8 +239,8 @@ also saves.
 
 ## Commands
 
-In command mode,
-`Tab` and `Shift-Tab` complete or cycle command names.
+`M-x` opens the `:` command prompt; type a command below without the `:`.
+In command mode, `Tab` and `Shift-Tab` complete or cycle command names.
 
 | Command | Action |
 |---------|--------|
@@ -236,9 +251,9 @@ In command mode,
 | `:edit` | Open focused file in `$EDITOR` |
 | `:clip` (`:export`) | Copy review to clipboard |
 | `:copy-url` | Copy the open PR URL to clipboard (PR mode) |
-| `:summary` | Show all pending local-draft comments; `j`/`k` select, `dd` deletes, and `Enter` jumps |
+| `:summary` | Show all pending local-draft comments; `C-n`/`C-p` select, `dd` deletes, and `Enter` jumps |
 | `:diff` | Toggle diff view (unified / side-by-side) |
-| `:theme` | Open the runtime theme picker (live preview; `/` filters, `Enter` applies and saves, `Esc` reverts) |
+| `:theme` | Open the runtime theme picker (live preview; `C-s` filters, `Enter` applies and saves, `C-g` reverts) |
 | `:theme <name>` | Apply and save `<name>` directly, without opening the picker |
 | `:focus` (`:f`) | Toggle single-file view |
 | `:stage` | Stage reviewed files (unstaged diffs only) |
@@ -277,26 +292,26 @@ In command mode,
 | `ZQ` | Quit without saving |
 | `?` | Toggle help |
 
-Pressing bare `q` no longer quits by default; it prints a reminder to use `:q` instead. Set
+Pressing bare `q` no longer quits by default; it prints a reminder to use `M-x q` instead. Set
 `q_quits = true` to restore `q` as a quit key in review modes.
 
 The summary replaces the diff while leaving the file sidebar visible when it is open. The first
-pending comment is selected when the summary opens. Use `j`/`k` to select the next
+pending comment is selected when the summary opens. Use `C-n`/`C-p` to select the next
 or previous comment; the view scrolls automatically to keep the selection visible. `Enter` returns
 to the continuous diff and jumps to the selected comment, leaving single-file view if necessary,
-while `Esc` returns without jumping. Reviewed files and hunks are revealed for the jump without
+while `C-g` returns without jumping. Reviewed files and hunks are revealed for the jump without
 losing their reviewed state.
 Press `dd` to delete the selected local draft, including comments whose original file or line
-is absent from the current diff. Other comments are kept. Return with `Esc` and use `:w` to
+is absent from the current diff. Other comments are kept. Return with `C-g` and use `M-x w` to
 save the deletion, following the existing diff-view deletion workflow.
 
 The theme picker lists every bundled theme plus any local `*.toml` themes in the theme directory.
-`j`/`k` move the selection and immediately repaint the UI with that theme (live preview) without
-saving anything. `/` opens a filter prompt — type to narrow the list by substring, `Enter` applies
-the filter and returns to navigation, `Esc` discards the filter edit without changing the list.
+`C-n`/`C-p` move the selection and immediately repaint the UI with that theme (live preview) without
+saving anything. `C-s` opens a filter prompt — type to narrow the list by substring, `Enter` applies
+the filter and returns to navigation, `C-g` discards the filter edit without changing the list.
 `Enter` on the picker itself keeps the currently previewed theme for the rest of the session. Like
 other `:` toggles, the choice is not written to `config.toml`; set `theme = "<name>"` there to keep
-it. `Esc` on the picker reverts the preview to whatever theme was active before it opened.
+it. `C-g` on the picker reverts the preview to whatever theme was active before it opened.
 
 Not every forge supports every event:
 
@@ -319,15 +334,15 @@ comments that the author publishes from Gerrit's Reply UI.
 | Key | Action |
 |-----|--------|
 | `Tab` / `Shift-Tab` | Switch between Local, Pull Requests, and Sessions tabs |
-| `j` / `k` | Move selection |
+| `C-n` / `C-p` | Move selection |
 | `Space` | Toggle local commit selection |
 | `Enter` | Confirm local commit range, open PR, load more PRs, or resume a saved review |
-| `/` | Filter currently loaded PR rows locally |
+| `C-s` | Filter currently loaded PR rows locally |
 | `r` | In Pull Requests tab, toggle all open PRs / PRs requesting your review |
 | `a` | In Sessions tab, show or hide saved reviews holding no progress |
 | `dd` | In Sessions tab, delete the saved review under the cursor (asks to confirm) |
-| `Esc` | Return to the diff |
-| `:q` | Quit |
+| `C-g` / `Esc` | Return to the diff |
+| `M-x q` | Quit |
 
 The Sessions tab lists saved reviews for the current checkout, so you can pick one
 instead of retyping the commit range it was opened with. Rows show the review target,
@@ -350,17 +365,17 @@ commit an approval covered, so no commits are preselected there.
 
 | Key | Action |
 |-----|--------|
-| `j` / `k` | Navigate commits |
+| `C-n` / `C-p` | Navigate commits |
 | `Space` / `Enter` | Toggle commit selection (updates diff) |
 | `(` / `)` | Cycle through individual commits |
-| `Esc` | Return focus to diff |
+| `C-g` / `Esc` | Return focus to diff |
 
 ## Confirm dialogs
 
 | Key | Action |
 |-----|--------|
 | `y` / `Enter` | Yes |
-| `n` / `Esc` | No |
+| `n` / `C-g` / `Esc` | No |
 
 ## Mouse
 
