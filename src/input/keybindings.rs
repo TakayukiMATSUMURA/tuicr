@@ -186,6 +186,26 @@ pub fn map_global_key(key: KeyEvent) -> Action {
     }
 }
 
+/// Rewrites the Emacs motion chords to the keys the mode maps already bind,
+/// so `C-n` works wherever `Down` does, `C-g` wherever `Esc` does, and so on.
+pub fn translate_emacs_key(key: KeyEvent) -> KeyEvent {
+    let code = match (key.code, key.modifiers) {
+        (KeyCode::Char('n'), KeyModifiers::CONTROL) => KeyCode::Down,
+        (KeyCode::Char('p'), KeyModifiers::CONTROL) => KeyCode::Up,
+        (KeyCode::Char('f'), KeyModifiers::CONTROL) => KeyCode::Right,
+        (KeyCode::Char('b'), KeyModifiers::CONTROL) => KeyCode::Left,
+        (KeyCode::Char('v'), KeyModifiers::CONTROL) => KeyCode::PageDown,
+        (KeyCode::Char('v'), KeyModifiers::ALT) => KeyCode::PageUp,
+        (KeyCode::Char('g'), KeyModifiers::CONTROL) => KeyCode::Esc,
+        _ => return key,
+    };
+    KeyEvent {
+        code,
+        modifiers: KeyModifiers::NONE,
+        ..key
+    }
+}
+
 pub fn map_key_to_action(key: KeyEvent, mode: InputMode, leader_key: char) -> Action {
     map_key_to_action_with_q_quits(key, mode, leader_key, false)
 }
@@ -704,6 +724,26 @@ mod tests {
             map_normal_mode(key_shift('H'), DEFAULT_LEADER_KEY),
             Action::None
         );
+    }
+
+    #[test]
+    fn should_translate_emacs_motion_chords() {
+        let ctrl = |c: char| KeyEvent::new(KeyCode::Char(c), KeyModifiers::CONTROL);
+        let alt = |c: char| KeyEvent::new(KeyCode::Char(c), KeyModifiers::ALT);
+        for (chord, code) in [
+            (ctrl('n'), KeyCode::Down),
+            (ctrl('p'), KeyCode::Up),
+            (ctrl('f'), KeyCode::Right),
+            (ctrl('b'), KeyCode::Left),
+            (ctrl('v'), KeyCode::PageDown),
+            (alt('v'), KeyCode::PageUp),
+            (ctrl('g'), KeyCode::Esc),
+        ] {
+            assert_eq!(translate_emacs_key(chord), key(code), "{chord:?}");
+        }
+        for other in [key(KeyCode::Char('n')), ctrl('a'), ctrl('l'), alt('b')] {
+            assert_eq!(translate_emacs_key(other), other);
+        }
     }
 
     #[test]
