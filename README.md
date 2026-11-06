@@ -1,6 +1,6 @@
 # tuicr
 
-**A code review TUI with vim keybindings. Export to GitHub, GitLab, Gitea, Bitbucket, Azure DevOps, Gerrit, or clipboard.**
+**A code review TUI with Emacs keybindings. Export to GitHub, GitLab, Gitea, Bitbucket, Azure DevOps, Gerrit, or clipboard.**
 
 [![Crates.io](https://img.shields.io/crates/v/tuicr)](https://crates.io/crates/tuicr)
 [![License](https://img.shields.io/crates/l/tuicr)](./LICENSE)
@@ -97,8 +97,8 @@ The default Git backend detects renames using a 50% similarity threshold and hon
 Git's `diff.renames` and `diff.renameLimit` settings. Working-tree reviews include
 untracked destinations in rename detection, so a move can appear as `R` before staging.
 
-Inside tuicr, navigate with `j`/`k`, press `c` to comment, then `y` to copy the review or
-`:submit` to push it to GitHub, GitLab, Gitea, Bitbucket, Azure DevOps, or Gerrit. When reopening a
+Inside tuicr, navigate with `C-n`/`C-p`, press `c` to comment, then `y` to copy the review or
+`M-x submit` to push it to GitHub, GitLab, Gitea, Bitbucket, Azure DevOps, or Gerrit. When reopening a
 pull request you've reviewed before, tuicr preselects commits newer than your latest submitted
 review when that metadata is available; commits already covered by that review are marked with
 `✓` in the inline selector.
@@ -106,13 +106,13 @@ review when that metadata is available; commits already covered by that review a
 there.)
 Use `:summary` during a review to show every pending local-draft comment. The summary replaces the
 diff while leaving the file sidebar visible when it is open. The first
-comment is selected when the view opens; use `j`/`k` to select the next or previous comment, and
+comment is selected when the view opens; use `C-n`/`C-p` to select the next or previous comment, and
 the view scrolls automatically to keep it visible. Press `Enter` to jump to the selected comment
-in the continuous diff, leaving single-file view if necessary, or `Esc` to return to the diff. If
+in the continuous diff, leaving single-file view if necessary, or `C-g` to return to the diff. If
 its file or hunk is already marked reviewed, tuicr reveals the target without clearing that
 reviewed state.
 Press `dd` to delete the selected local draft, even if its original line or file is absent from
-this diff. Return with `Esc` and use `:w` to save the deletion, as with diff-view deletion.
+this diff. Return with `C-g` and use `M-x w` to save the deletion, as with diff-view deletion.
 Auto-detects git, jj, or mercurial. SHA-256 Git repositories automatically use the Git CLI backend,
 including when reviewing root commits; ordinary SHA-1 repositories still default to libgit2.
 
@@ -122,8 +122,7 @@ including when reviewing root commits; ordinary SHA-1 repositories still default
 |---|:---:|:---:|:---:|:---:|:---:|
 | TUI diff viewer | ✅ | ✅ | ✅ | ❌ | ❌ |
 | Write comments in the TUI | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Vim keybindings | ✅ | ❌ | partial¹ | ❌ | ❌ |
-| Push inline review to GitHub | ✅ | ❌ | ❌ | partial² | ❌ |
+| Push inline review to GitHub | ✅ | ❌ | ❌ | partial¹ | ❌ |
 | Push inline review to GitLab | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Push inline review to Gitea | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Push inline review to Bitbucket | ✅ | ❌ | ❌ | ❌ | ❌ |
@@ -135,10 +134,7 @@ including when reviewing root commits; ordinary SHA-1 repositories still default
 | Mercurial (hg) | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Single static binary | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-¹ Lumen has `j`/`k` navigation but no broader vim model (visual mode, `{N}G`, `Ctrl-d`/`Ctrl-u`,
-etc.).
-
-² `gh pr review` posts approve/comment/request-changes at the review level only. No inline line
+¹ `gh pr review` posts approve/comment/request-changes at the review level only. No inline line
 comments.
 
 ## Export your review
@@ -312,32 +308,39 @@ A first-session cheatsheet. Press `?` inside tuicr for the full reference.
 
 | Key | Action |
 |---|---|
-| `j` / `k` | Down / up |
-| `Ctrl-d` / `Ctrl-u` | Half-page down / up |
-| `g` / `G` | Top / bottom |
+| `C-n` / `C-p` | Down / up |
+| `C-f` / `C-b` | Scroll right / left |
+| `C-v` / `M-v` | Page down / up |
+| `M-<` / `M->` | Top / bottom |
 | `{` / `}` | Previous / next file |
 | `[` / `]` | Previous / next hunk |
 | `m` / `M` | Next / previous comment |
-| `/` | Search the diff by case-insensitive regex, or search the file tree/help by text — whichever is focused/open |
-| `n` / `N` | Next / previous search match (wraps); matches stay highlighted — `Esc` clears |
+| `C-s` | Search the diff by case-insensitive regex, or search the file tree/help by text — whichever is focused/open |
+| `C-s` / `C-r` | Next / previous search match (wraps) while matches are highlighted — `C-g` clears |
 | `i` / `e` (file tree) | Filter files in / out by regex; narrows the tree **and** the diff |
 | `I` / `E` (file tree) | Clear the include / exclude filter |
 | `c` / `C` | Add line / file comment |
-| `v` / `V` | Visual mode (range comment) |
+| `C-SPC` | Visual mode (range comment) |
 | `s` (visual mode) | Suggest changes to the selected code lines |
 | `r` | Toggle file reviewed |
 | `R` | Toggle hunk reviewed |
 | `e` | Open focused file in `$EDITOR` (in PR review: the PR's revision, as a read-only copy when the checkout differs) |
 | `y` | Copy review to clipboard |
+| `M-x` | Open the `:` command prompt |
 | `:edit` | Open focused file in `$EDITOR` |
 | `:submit` | Push review to GitHub, GitLab, Gitea, Bitbucket, Azure DevOps, or Gerrit |
-| `:theme` | Open a live-preview theme picker (`/` to filter); `:theme <name>` applies directly. Session-only; set `theme` in `config.toml` to keep it |
+| `:theme` | Open a live-preview theme picker (`C-s` to filter); `:theme <name>` applies directly. Session-only; set `theme` in `config.toml` to keep it |
 | `Tab` in `:` prompt | Complete or cycle commands |
 | `Ctrl-l` | Redraw the whole screen |
+| `C-g` | Cancel, like `Esc` |
 | `?` | Toggle full help |
 
-While composing a comment in the default editor, `↑` / `↓` move one displayed row,
-including wrapped rows, preserving the column where possible.
+While composing a comment in the default editor, `C-p` / `C-n` move one displayed row,
+including wrapped rows, preserving the column where possible. `C-b` / `C-f` move one
+character and `C-k` deletes to the end of the line.
+
+`M-` keys need the terminal to send Option/Alt as Meta. On macOS, turn on "Use Option as
+Meta key" in Terminal, or set the Option key to "Esc+" in iTerm2.
 
 Full reference in [docs/KEYBINDINGS.md](docs/KEYBINDINGS.md).
 
