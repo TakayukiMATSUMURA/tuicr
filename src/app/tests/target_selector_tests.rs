@@ -2643,7 +2643,7 @@ fn should_show_quit_hint_message_without_quitting_in_commit_select_mode() {
     assert!(!app.should_quit);
     assert_eq!(
         app.message.as_ref().map(|m| m.content.as_str()),
-        Some("q no longer quits — use :q to quit")
+        Some("q no longer quits — use M-x q to quit")
     );
 }
 

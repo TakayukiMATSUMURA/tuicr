@@ -62,7 +62,6 @@ pub enum Action {
 
     // Mode changes
     EnterCommandMode,
-    EnterSearchMode,
     ExitMode,
     ToggleHelp,
 
@@ -159,9 +158,6 @@ pub enum Action {
     FileTreeClearInclude,
     /// `E` — drop the exclude filter.
     FileTreeClearExclude,
-    /// `/` — open the file-tree search prompt.
-    FileTreeSearch,
-
     /// `/` inside the theme picker — open its filter prompt.
     ThemePickerFilter,
 
@@ -219,7 +215,7 @@ pub fn map_key_to_action_with_q_quits(
         InputMode::Comment => map_comment_mode(key),
         InputMode::Help => map_help_mode(key),
         InputMode::MessageDetails => match map_help_mode(key) {
-            Action::EnterSearchMode | Action::SearchNext | Action::SearchPrev => Action::None,
+            Action::SearchNext | Action::SearchPrev => Action::None,
             action => action,
         },
         InputMode::Summary => map_summary_mode(key),
@@ -290,16 +286,15 @@ fn map_normal_mode_with_q_quits(key: KeyEvent, leader_key: char, q_quits: bool) 
         (KeyCode::Char('i'), KeyModifiers::NONE) => Action::EditComment,
         (KeyCode::Char('A'), _) => Action::EditCommentAtEnd,
         (KeyCode::Char('d'), KeyModifiers::NONE) => Action::PendingDCommand,
-        (KeyCode::Char('v') | KeyCode::Char('V'), _) => Action::EnterVisualMode,
+        (KeyCode::Char(' '), KeyModifiers::CONTROL) => Action::EnterVisualMode,
         (KeyCode::Char('y'), KeyModifiers::NONE) => Action::ExportToClipboard,
         (KeyCode::Char('Y'), _) => Action::CopyCommentAtCursor,
         (KeyCode::Char('e'), KeyModifiers::NONE) => Action::EditFile,
-        (KeyCode::Char('n'), KeyModifiers::NONE) => Action::SearchNext,
-        (KeyCode::Char('N'), _) => Action::SearchPrev,
+        (KeyCode::Char('s'), KeyModifiers::CONTROL) => Action::SearchNext,
+        (KeyCode::Char('r'), KeyModifiers::CONTROL) => Action::SearchPrev,
 
-        // Mode changes (use _ for shifted characters like : and ?)
-        (KeyCode::Char(':'), _) => Action::EnterCommandMode,
-        (KeyCode::Char('/'), _) => Action::EnterSearchMode,
+        // Mode changes (use _ for shifted characters like ?)
+        (KeyCode::Char('x'), KeyModifiers::ALT) => Action::EnterCommandMode,
         (KeyCode::Char('?'), _) => Action::ToggleHelp,
         (KeyCode::Esc, KeyModifiers::NONE) => Action::ClearSearchHighlight,
 
@@ -351,6 +346,7 @@ fn map_search_mode(key: KeyEvent) -> Action {
     match (key.code, key.modifiers) {
         (KeyCode::Esc, KeyModifiers::NONE) => Action::ExitMode,
         (KeyCode::Enter, KeyModifiers::NONE) => Action::SubmitInput,
+        (KeyCode::Char('s'), KeyModifiers::CONTROL) => Action::SubmitInput,
         (KeyCode::Backspace, mods) if mods.contains(KeyModifiers::ALT) => Action::DeleteWord,
         (KeyCode::Backspace, KeyModifiers::NONE) => Action::DeleteChar,
         (KeyCode::Char('w'), KeyModifiers::CONTROL) => Action::DeleteWord,
@@ -450,9 +446,8 @@ fn map_help_mode(key: KeyEvent) -> Action {
         (KeyCode::PageUp, KeyModifiers::NONE) => Action::PageUp,
         (KeyCode::Char('<'), mods) if mods.contains(KeyModifiers::ALT) => Action::GoToTop,
         (KeyCode::Char('>'), mods) if mods.contains(KeyModifiers::ALT) => Action::GoToBottom,
-        (KeyCode::Char('/'), _) => Action::EnterSearchMode,
-        (KeyCode::Char('n'), KeyModifiers::NONE) => Action::SearchNext,
-        (KeyCode::Char('N'), _) => Action::SearchPrev,
+        (KeyCode::Char('s'), KeyModifiers::CONTROL) => Action::SearchNext,
+        (KeyCode::Char('r'), KeyModifiers::CONTROL) => Action::SearchPrev,
         _ => Action::None,
     }
 }
@@ -532,10 +527,10 @@ fn map_commit_select_mode_with_q_quits(key: KeyEvent, q_quits: bool) -> Action {
         (KeyCode::Enter, KeyModifiers::NONE) => Action::ConfirmCommitSelect,
         (KeyCode::Esc, KeyModifiers::NONE) => Action::ExitMode,
         (KeyCode::Char('q'), KeyModifiers::NONE) => q_action(q_quits),
-        (KeyCode::Char(':'), _) => Action::EnterCommandMode,
+        (KeyCode::Char('x'), KeyModifiers::ALT) => Action::EnterCommandMode,
         (KeyCode::Tab, KeyModifiers::NONE) => Action::TargetSelectorTabNext,
         (KeyCode::BackTab, _) => Action::TargetSelectorTabPrev,
-        (KeyCode::Char('/'), _) => Action::BeginTargetFilter,
+        (KeyCode::Char('s'), KeyModifiers::CONTROL) => Action::BeginTargetFilter,
         (KeyCode::Char('r'), KeyModifiers::NONE) => Action::TogglePrReviewRequestedFilter,
         // Sessions-tab only; the other tabs ignore these in their dispatch.
         (KeyCode::Char('a'), KeyModifiers::NONE) => Action::SessionsTabToggleShowEmpty,
@@ -565,7 +560,6 @@ pub fn map_file_tree_mode_with_q_quits(key: KeyEvent, leader_key: char, q_quits:
         (KeyCode::Char('e'), KeyModifiers::NONE) => Action::FileTreeFilterExclude,
         (KeyCode::Char('I'), _) => Action::FileTreeClearInclude,
         (KeyCode::Char('E'), _) => Action::FileTreeClearExclude,
-        (KeyCode::Char('/'), _) => Action::FileTreeSearch,
         _ => map_normal_mode_with_q_quits(key, leader_key, q_quits),
     }
 }
@@ -613,7 +607,7 @@ fn map_theme_picker_mode(key: KeyEvent) -> Action {
         (KeyCode::Enter, KeyModifiers::NONE) => Action::SubmitInput,
         (KeyCode::Down, KeyModifiers::NONE) => Action::CursorDown(1),
         (KeyCode::Up, KeyModifiers::NONE) => Action::CursorUp(1),
-        (KeyCode::Char('/'), KeyModifiers::NONE) => Action::ThemePickerFilter,
+        (KeyCode::Char('s'), KeyModifiers::CONTROL) => Action::ThemePickerFilter,
         _ => Action::None,
     }
 }
@@ -649,7 +643,7 @@ fn map_visual_mode_with_q_quits(key: KeyEvent, q_quits: bool) -> Action {
         (KeyCode::Enter, KeyModifiers::NONE) => Action::AddRangeComment,
         (KeyCode::Char('y'), KeyModifiers::NONE) => Action::ExportToClipboard,
         (KeyCode::Esc, KeyModifiers::NONE) => Action::ExitMode,
-        (KeyCode::Char('v') | KeyCode::Char('V'), _) => Action::ExitMode,
+        (KeyCode::Char(' '), KeyModifiers::CONTROL) => Action::ExitMode,
         (KeyCode::Char('q'), KeyModifiers::NONE) => q_action(q_quits),
         _ => Action::None,
     }
@@ -686,10 +680,6 @@ mod tests {
         assert_eq!(
             map_file_tree_mode(key_shift('E'), DEFAULT_LEADER_KEY),
             Action::FileTreeClearExclude
-        );
-        assert_eq!(
-            map_file_tree_mode(key(KeyCode::Char('/')), DEFAULT_LEADER_KEY),
-            Action::FileTreeSearch
         );
     }
 
@@ -760,7 +750,7 @@ mod tests {
         );
         assert_eq!(
             map_normal_mode(key(KeyCode::Char('/')), DEFAULT_LEADER_KEY),
-            Action::EnterSearchMode
+            Action::None
         );
     }
 
@@ -865,13 +855,34 @@ mod tests {
     }
 
     #[test]
-    fn should_map_slash_and_match_navigation_in_help_mode() {
+    fn should_map_ctrl_s_and_ctrl_r_to_search_steps() {
+        let ctrl = |c: char| KeyEvent::new(KeyCode::Char(c), KeyModifiers::CONTROL);
+        assert_eq!(map_help_mode(ctrl('s')), Action::SearchNext);
+        assert_eq!(map_help_mode(ctrl('r')), Action::SearchPrev);
         assert_eq!(
-            map_help_mode(key(KeyCode::Char('/'))),
-            Action::EnterSearchMode
+            map_normal_mode(ctrl('s'), DEFAULT_LEADER_KEY),
+            Action::SearchNext
         );
-        assert_eq!(map_help_mode(key(KeyCode::Char('n'))), Action::SearchNext);
-        assert_eq!(map_help_mode(key_shift('N')), Action::SearchPrev);
+        assert_eq!(
+            map_normal_mode(ctrl('r'), DEFAULT_LEADER_KEY),
+            Action::SearchPrev
+        );
+        assert_eq!(map_search_mode(ctrl('s')), Action::SubmitInput);
+        assert_eq!(map_theme_picker_mode(ctrl('s')), Action::ThemePickerFilter);
+    }
+
+    #[test]
+    fn should_toggle_visual_mode_with_ctrl_space() {
+        let ctrl_space = KeyEvent::new(KeyCode::Char(' '), KeyModifiers::CONTROL);
+        assert_eq!(
+            map_normal_mode(ctrl_space, DEFAULT_LEADER_KEY),
+            Action::EnterVisualMode
+        );
+        assert_eq!(map_visual_mode(ctrl_space), Action::ExitMode);
+        assert_eq!(
+            map_normal_mode(key(KeyCode::Char('v')), DEFAULT_LEADER_KEY),
+            Action::None
+        );
     }
 
     #[test]
@@ -885,9 +896,8 @@ mod tests {
             Action::CursorDown(1)
         );
         for key in [
-            key(KeyCode::Char('/')),
-            key(KeyCode::Char('n')),
-            key_shift('N'),
+            KeyEvent::new(KeyCode::Char('s'), KeyModifiers::CONTROL),
+            KeyEvent::new(KeyCode::Char('r'), KeyModifiers::CONTROL),
         ] {
             assert_eq!(
                 map_key_to_action(key, InputMode::MessageDetails, DEFAULT_LEADER_KEY),
@@ -1158,17 +1168,26 @@ mod tests {
     }
 
     #[test]
-    fn should_map_slash_to_begin_target_filter_in_commit_select_mode() {
+    fn should_map_ctrl_s_to_begin_target_filter_in_commit_select_mode() {
         // given / when
-        let action = map_commit_select_mode(key(KeyCode::Char('/')));
+        let action =
+            map_commit_select_mode(KeyEvent::new(KeyCode::Char('s'), KeyModifiers::CONTROL));
         // then
         assert_eq!(action, Action::BeginTargetFilter);
     }
 
     #[test]
-    fn should_map_colon_to_command_mode_in_commit_select_mode() {
-        let action = map_commit_select_mode(key(KeyCode::Char(':')));
-        assert_eq!(action, Action::EnterCommandMode);
+    fn should_map_meta_x_to_command_mode() {
+        let meta_x = KeyEvent::new(KeyCode::Char('x'), KeyModifiers::ALT);
+        assert_eq!(map_commit_select_mode(meta_x), Action::EnterCommandMode);
+        assert_eq!(
+            map_normal_mode(meta_x, DEFAULT_LEADER_KEY),
+            Action::EnterCommandMode
+        );
+        assert_eq!(
+            map_normal_mode(key(KeyCode::Char(':')), DEFAULT_LEADER_KEY),
+            Action::None
+        );
     }
 
     #[test]

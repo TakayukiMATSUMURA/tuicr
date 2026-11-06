@@ -21,7 +21,7 @@ const WHEEL_COLS: usize = 4;
 
 /// Shown when a bare `q` is pressed in a mode that used to quit on it.
 /// Transitional — drop this a few releases after the `q` removal has landed.
-const QUIT_HINT_MESSAGE: &str = "q no longer quits — use :q to quit";
+const QUIT_HINT_MESSAGE: &str = "q no longer quits — use M-x q to quit";
 
 const COMMAND_SPECS: &[CommandSpec] = &[
     CommandSpec::new(&["q", "quit"], CommandKind::Quit),
@@ -585,13 +585,13 @@ pub fn handle_help_action(app: &mut App, action: Action) {
         Action::GoToBottom => app.help_scroll_to_bottom(),
         Action::MouseScrollDown(n) => app.help_scroll_down(n),
         Action::MouseScrollUp(n) => app.help_scroll_up(n),
-        Action::EnterSearchMode => app.enter_search_mode(),
-        Action::SearchNext => {
+        Action::SearchNext if app.help_state.current_match_line.is_some() => {
             app.search_next_in_help();
         }
-        Action::SearchPrev => {
+        Action::SearchPrev if app.help_state.current_match_line.is_some() => {
             app.search_prev_in_help();
         }
+        Action::SearchNext | Action::SearchPrev => app.enter_search_mode(),
         Action::ToggleHelp => app.toggle_help(),
         Action::Quit => app.should_quit = true,
         _ => {}
@@ -1535,11 +1535,14 @@ pub fn handle_file_list_action(app: &mut App, action: Action) {
         Action::FileTreeFilterExclude => app.begin_file_tree_prompt(FileTreePrompt::Exclude),
         Action::FileTreeClearInclude => app.clear_include_filter(),
         Action::FileTreeClearExclude => app.clear_exclude_filter(),
-        Action::FileTreeSearch => app.begin_file_tree_prompt(FileTreePrompt::Search),
-        // With a tree search active, n/N step file matches. Otherwise they
-        // fall through to the diff search so the shared binding still works.
         Action::SearchNext if app.file_tree_search_active() => app.file_tree_search_next(),
         Action::SearchPrev if app.file_tree_search_active() => app.file_tree_search_prev(),
+        Action::SearchNext | Action::SearchPrev => {
+            app.begin_file_tree_prompt(FileTreePrompt::Search)
+        }
+        Action::ClearSearchHighlight if app.file_tree_search_active() => {
+            app.file_filter.search = None
+        }
         Action::CursorDown(n) => app.file_list_down(n),
         Action::CursorUp(n) => app.file_list_up(n),
         Action::ScrollLeft(n) => app.file_list_state.scroll_left(n),
@@ -1801,7 +1804,6 @@ fn handle_shared_normal_action(app: &mut App, action: Action) {
         }
         Action::ToggleHelp => app.toggle_help(),
         Action::EnterCommandMode => app.enter_command_mode(),
-        Action::EnterSearchMode => app.enter_search_mode(),
         Action::AddLineComment => {
             let line = app.get_line_at_cursor();
             if line.is_some() {
@@ -1818,12 +1820,13 @@ fn handle_shared_normal_action(app: &mut App, action: Action) {
         Action::EditCommentAtEnd if app.comment_vim_enabled => edit_comment_at_cursor(app, true),
         Action::ExportToClipboard => handle_export(app),
         Action::CopyCommentAtCursor => handle_copy_comment_at_cursor(app),
-        Action::SearchNext => {
+        Action::SearchNext if app.search_highlight_visible => {
             app.search_next_in_diff();
         }
-        Action::SearchPrev => {
+        Action::SearchPrev if app.search_highlight_visible => {
             app.search_prev_in_diff();
         }
+        Action::SearchNext | Action::SearchPrev => app.enter_search_mode(),
         Action::ClearSearchHighlight => app.clear_search_highlight(),
         Action::EnterVisualMode => {
             if app.get_line_at_cursor().is_some() {
