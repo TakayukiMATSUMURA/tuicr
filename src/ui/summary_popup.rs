@@ -55,7 +55,7 @@ pub fn render_summary(frame: &mut Frame, app: &mut App, area: Rect) {
     let pending = collect_pending_comments(app);
     let pending_count = pending.len();
     let title = format!(
-        " Pending Comments ({pending_count}) — j/k select, dd delete, Enter to jump, Esc to return "
+        " Pending Comments ({pending_count}) — C-n/C-p select, dd delete, Enter to jump, C-g to return "
     );
     let block = Block::default()
         .title(title)

@@ -50,7 +50,7 @@ pub fn render_message_details(frame: &mut Frame, app: &mut App) {
     };
     frame.render_widget(
         block.title(format!(
-            " Messages (j/k scroll, q/Esc close){scroll_indicator} "
+            " Messages (C-n/C-p scroll, q/C-g close){scroll_indicator} "
         )),
         area,
     );
@@ -76,14 +76,14 @@ fn leader_display(leader: char) -> char {
     }
 }
 
-/// Single-file view help for `j`/`k` at a file's edge. The release-gated walk
+/// Single-file view help for `C-n`/`C-p` at a file's edge. The release-gated walk
 /// to the next file only runs where the terminal reports key releases, so the
 /// help mentions it only there.
 fn single_file_edge_help(supports_keyboard_enhancement: bool) -> &'static str {
     if supports_keyboard_enhancement {
-        "  j/k stop at the file's edges. Release and press again to walk on."
+        "  C-n/C-p stop at the file's edges. Release and press again to walk on."
     } else {
-        "  j/k stop at the file's edges."
+        "  C-n/C-p stop at the file's edges."
     }
 }
 
@@ -113,7 +113,7 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
     frame.render_widget(Clear, area);
 
     let block = Block::default()
-        .title(" Help (j/k scroll, h/l pan, / search) - Press ? or Esc to close ")
+        .title(" Help (C-n/C-p scroll, C-b/C-f pan, C-s search) - Press ? or C-g to close ")
         .borders(Borders::ALL)
         .style(styles::popup_style(theme))
         .border_style(styles::border_style(theme, true));
@@ -129,31 +129,17 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         Line::from(""),
         Line::from(vec![
             Span::styled(
-                "  j/k       ",
+                "  C-n/C-p   ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Scroll down/up"),
         ]),
         Line::from(vec![
             Span::styled(
-                "  Ctrl-e/y  ",
+                "  C-v/M-v   ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
-            Span::raw("Scroll view down/up"),
-        ]),
-        Line::from(vec![
-            Span::styled(
-                "  Ctrl-d/u  ",
-                Style::default().add_modifier(Modifier::BOLD),
-            ),
-            Span::raw("Half page down/up"),
-        ]),
-        Line::from(vec![
-            Span::styled(
-                "  Ctrl-f/b  ",
-                Style::default().add_modifier(Modifier::BOLD),
-            ),
-            Span::raw("Full page down/up"),
+            Span::raw("Page down/up"),
         ]),
         Line::from(vec![
             Span::styled(
@@ -164,14 +150,14 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         ]),
         Line::from(vec![
             Span::styled(
-                "  g/G       ",
+                "  M-</M->   ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Go to first/last file"),
         ]),
         Line::from(vec![
             Span::styled(
-                "  {N}G      ",
+                "  {N}M->    ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Go to source line N in current file"),
@@ -199,21 +185,21 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         ]),
         Line::from(vec![
             Span::styled(
-                "  /         ",
+                "  C-s       ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Search within diff (case-insensitive regex)"),
         ]),
         Line::from(vec![
             Span::styled(
-                "  n/N       ",
+                "  C-s/C-r   ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Next/prev search match (wraps)"),
         ]),
         Line::from(vec![
             Span::styled(
-                "  Esc       ",
+                "  C-g/Esc   ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Clear search highlighting"),
@@ -283,18 +269,18 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         ]),
         Line::from(vec![
             Span::styled(
-                "  h/l       ",
+                "  C-b/C-f   ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Scroll diff left/right (or ←/→)"),
         ]),
         Line::from(vec![
-            Span::styled("  h/← at 0 ", Style::default().add_modifier(Modifier::BOLD)),
+            Span::styled("  C-b at 0 ", Style::default().add_modifier(Modifier::BOLD)),
             Span::raw("Reveal + focus file list"),
         ]),
         Line::from(vec![
             Span::styled(
-                "  l/→ in list",
+                "  C-f in list",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Hide list + focus diff"),
@@ -322,7 +308,7 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         )),
         Line::from(vec![
             Span::styled(
-                "  j/k       ",
+                "  C-n/C-p   ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Navigate commits"),
@@ -343,7 +329,7 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         ]),
         Line::from(vec![
             Span::styled(
-                "  Esc       ",
+                "  C-g/Esc   ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Return focus to diff"),
@@ -363,7 +349,7 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         ]),
         Line::from(vec![
             Span::styled(
-                "  j/k       ",
+                "  C-n/C-p   ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Move row"),
@@ -384,7 +370,7 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         ]),
         Line::from(vec![
             Span::styled(
-                "  /         ",
+                "  C-s       ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Local filter for current tab"),
@@ -412,7 +398,7 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         ]),
         Line::from(vec![
             Span::styled(
-                "  Esc       ",
+                "  C-g/Esc   ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Return to the diff"),
@@ -425,7 +411,7 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         Line::from(""),
         Line::from(vec![
             Span::styled(
-                "  j/k       ",
+                "  C-n/C-p   ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Navigate review events"),
@@ -439,7 +425,7 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         ]),
         Line::from(vec![
             Span::styled(
-                "  Esc       ",
+                "  C-g/Esc   ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Cancel"),
@@ -501,10 +487,10 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         ]),
         Line::from(vec![
             Span::styled(
-                "  /         ",
+                "  C-s       ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
-            Span::raw("Search file paths; n/N step matches (selection only)"),
+            Span::raw("Search file paths; C-s/C-r step matches (selection only)"),
         ]),
         Line::from(Span::raw(
             "  Patterns are case-insensitive and match the whole relative path.",
@@ -520,14 +506,14 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         Line::from(""),
         Line::from(vec![
             Span::styled(
-                "  j/k       ",
+                "  C-n/C-p   ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Navigate comments"),
         ]),
         Line::from(vec![
             Span::styled(
-                "  h/l       ",
+                "  C-b/C-f   ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Scroll comment rows left/right"),
@@ -617,7 +603,7 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         ]),
         Line::from(vec![
             Span::styled(
-                "  v/V       ",
+                "  C-SPC     ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Enter visual mode for range comments"),
@@ -630,7 +616,7 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         Line::from(""),
         Line::from(vec![
             Span::styled(
-                "  j/k       ",
+                "  C-n/C-p   ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Extend selection down/up"),
@@ -651,7 +637,7 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         ]),
         Line::from(vec![
             Span::styled(
-                "  Esc/v/V   ",
+                "  C-g/C-SPC ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Cancel visual selection"),
@@ -666,11 +652,13 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         comment_mode_row("Enter", "Save comment"),
         comment_mode_row("Ctrl-S", "Save comment"),
         comment_mode_row("Shift-Enter/Alt-Enter/Ctrl-J", "Insert newline"),
-        comment_mode_row("Up/Down", "Previous/next displayed row (default editor)"),
+        comment_mode_row("C-p/C-n", "Previous/next displayed row (default editor)"),
+        comment_mode_row("C-b/C-f", "Character left/right"),
         comment_mode_row("Ctrl-A/E", "Line start/end"),
+        comment_mode_row("C-k", "Delete to end of line"),
         comment_mode_row("Ctrl/Alt-Left/Right", "Word left/right"),
         comment_mode_row("Cmd-Left/Right", "Line start/end (macOS)"),
-        comment_mode_row("Esc/Ctrl-C", "Cancel"),
+        comment_mode_row("C-g/Esc/Ctrl-C", "Cancel"),
         comment_mode_row(
             "comment_vim",
             if app.comment_vim_enabled {
@@ -685,6 +673,13 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
             Style::default().add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
         )),
         Line::from(""),
+        Line::from(vec![
+            Span::styled(
+                "  M-x       ",
+                Style::default().add_modifier(Modifier::BOLD),
+            ),
+            Span::raw("Open the : prompt for the commands below"),
+        ]),
         Line::from(vec![
             Span::styled(
                 "  :{N}      ",
@@ -769,7 +764,7 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
                 "  :summary  ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
-            Span::raw("Pending comments; j/k select, dd delete, Enter jumps"),
+            Span::raw("Pending comments; C-n/C-p select, dd delete, Enter jumps"),
         ]),
         Line::from(vec![
             Span::styled(
@@ -965,14 +960,14 @@ pub fn render_help(frame: &mut Frame, app: &mut App) {
         Line::from(""),
         Line::from(vec![
             Span::styled(
-                "  /         ",
+                "  C-s       ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Search within this help (case-insensitive)"),
         ]),
         Line::from(vec![
             Span::styled(
-                "  n/N       ",
+                "  C-s/C-r   ",
                 Style::default().add_modifier(Modifier::BOLD),
             ),
             Span::raw("Next/previous help search match"),
@@ -1110,7 +1105,7 @@ mod tests {
         // then
         assert_eq!(
             help,
-            "  j/k stop at the file's edges. Release and press again to walk on."
+            "  C-n/C-p stop at the file's edges. Release and press again to walk on."
         );
     }
 
@@ -1121,7 +1116,7 @@ mod tests {
         // when
         let help = single_file_edge_help(supports_keyboard_enhancement);
         // then
-        assert_eq!(help, "  j/k stop at the file's edges.");
+        assert_eq!(help, "  C-n/C-p stop at the file's edges.");
     }
 
     #[test]
@@ -1134,7 +1129,7 @@ mod tests {
             "Ctrl-A/E",
             "Ctrl/Alt-Left/Right",
             "Cmd-Left/Right",
-            "Esc/Ctrl-C",
+            "C-g/Esc/Ctrl-C",
             "comment_vim",
         ];
 

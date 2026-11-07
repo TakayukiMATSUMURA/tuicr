@@ -272,7 +272,7 @@ fn should_render_an_unstaged_rename_without_changing_the_repository() {
         terminal.tmux(&["capture-pane", "-e", "-p", "-t", "review:0.0"]),
     )
     .unwrap();
-    terminal.tmux(&["send-keys", "-t", "review:0.0", "-l", ":q"]);
+    terminal.tmux(&["send-keys", "-t", "review:0.0", "M-x", "q"]);
     terminal.tmux(&["send-keys", "-t", "review:0.0", "Enter"]);
     wait_for("clean exit", || exit_code.exists());
     assert_eq!(fs::read_to_string(exit_code).unwrap().trim(), "0");

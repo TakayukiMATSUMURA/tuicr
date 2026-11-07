@@ -118,6 +118,7 @@ impl App {
                 self.input_mode = InputMode::Help;
                 self.help_state.scroll_offset = 0;
                 self.help_state.horizontal_offset = 0;
+                self.help_state.current_match_line = None;
             }
         }
     }

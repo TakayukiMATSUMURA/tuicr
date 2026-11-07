@@ -518,7 +518,7 @@ fn render_target_selector_footer(frame: &mut Frame, app: &App, area: Rect) {
             message_span
         } else {
             Span::styled(
-                " enter apply \u{00b7} esc cancel ",
+                " enter apply \u{00b7} C-g cancel ",
                 Style::default().fg(theme.fg_secondary),
             )
         };
@@ -550,7 +550,7 @@ fn render_target_selector_footer(frame: &mut Frame, app: &App, area: Rect) {
     } else {
         match app.target_tab {
             TargetTab::Local => {
-                "   j/k navigate \u{00b7} space range \u{00b7} \u{21b5} confirm \u{00b7} :q quit"
+                "   C-n/C-p navigate \u{00b7} space range \u{00b7} \u{21b5} confirm \u{00b7} M-x q quit"
                     .to_string()
             }
             TargetTab::PullRequests => {
@@ -558,7 +558,7 @@ fn render_target_selector_footer(frame: &mut Frame, app: &App, area: Rect) {
                     PullRequestListScope::Open => "r requested",
                     PullRequestListScope::ReviewRequested => "r all PRs",
                 };
-                format!("   j/k navigate · ↵ open · {scope_hint} · / filter · esc back")
+                format!("   C-n/C-p navigate · ↵ open · {scope_hint} · C-s filter · C-g back")
             }
             TargetTab::Sessions => {
                 let empty_hint = if app.sessions_tab.show_empty() {
@@ -566,7 +566,7 @@ fn render_target_selector_footer(frame: &mut Frame, app: &App, area: Rect) {
                 } else {
                     "a show empty"
                 };
-                format!("   j/k navigate · ↵ resume · dd delete · {empty_hint} · esc back")
+                format!("   C-n/C-p navigate · ↵ resume · dd delete · {empty_hint} · C-g back")
             }
         }
     };

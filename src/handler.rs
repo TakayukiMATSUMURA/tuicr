@@ -21,7 +21,7 @@ const WHEEL_COLS: usize = 4;
 
 /// Shown when a bare `q` is pressed in a mode that used to quit on it.
 /// Transitional — drop this a few releases after the `q` removal has landed.
-const QUIT_HINT_MESSAGE: &str = "q no longer quits — use :q to quit";
+const QUIT_HINT_MESSAGE: &str = "q no longer quits — use M-x q to quit";
 
 const COMMAND_SPECS: &[CommandSpec] = &[
     CommandSpec::new(&["q", "quit"], CommandKind::Quit),
@@ -579,21 +579,19 @@ pub fn handle_help_action(app: &mut App, action: Action) {
         Action::CursorUp(n) => app.help_scroll_up(n),
         Action::ScrollLeft(n) => app.help_scroll_left(n),
         Action::ScrollRight(n) => app.help_scroll_right(n),
-        Action::HalfPageDown => app.help_scroll_down(app.help_state.viewport_height / 2),
-        Action::HalfPageUp => app.help_scroll_up(app.help_state.viewport_height / 2),
         Action::PageDown => app.help_scroll_down(app.help_state.viewport_height),
         Action::PageUp => app.help_scroll_up(app.help_state.viewport_height),
         Action::GoToTop => app.help_scroll_to_top(),
         Action::GoToBottom => app.help_scroll_to_bottom(),
         Action::MouseScrollDown(n) => app.help_scroll_down(n),
         Action::MouseScrollUp(n) => app.help_scroll_up(n),
-        Action::EnterSearchMode => app.enter_search_mode(),
-        Action::SearchNext => {
+        Action::SearchNext if app.help_state.current_match_line.is_some() => {
             app.search_next_in_help();
         }
-        Action::SearchPrev => {
+        Action::SearchPrev if app.help_state.current_match_line.is_some() => {
             app.search_prev_in_help();
         }
+        Action::SearchNext | Action::SearchPrev => app.enter_search_mode(),
         Action::ToggleHelp => app.toggle_help(),
         Action::Quit => app.should_quit = true,
         _ => {}
@@ -605,12 +603,6 @@ pub fn handle_summary_action(app: &mut App, action: Action) {
     match action {
         Action::CursorDown(n) => app.summary_select_down(n),
         Action::CursorUp(n) => app.summary_select_up(n),
-        Action::HalfPageDown => {
-            app.summary_scroll_down(app.summary_state.viewport_height / 2);
-        }
-        Action::HalfPageUp => {
-            app.summary_scroll_up(app.summary_state.viewport_height / 2);
-        }
         Action::PageDown => app.summary_scroll_down(app.summary_state.viewport_height),
         Action::PageUp => app.summary_scroll_up(app.summary_state.viewport_height),
         Action::GoToTop => app.summary_select_first(),
@@ -1195,6 +1187,7 @@ pub fn handle_comment_action(app: &mut App, action: Action) {
             | Action::DeleteChar
             | Action::DeleteWord
             | Action::ClearLine
+            | Action::KillLine
             | Action::TextCursorLeft
             | Action::TextCursorRight
             | Action::TextCursorLineStart
@@ -1255,6 +1248,14 @@ pub fn handle_comment_action(app: &mut App, action: Action) {
         Action::ClearLine => {
             app.comment_buffer.clear();
             app.comment_cursor = 0;
+        }
+        Action::KillLine => {
+            let end = match comment_line_end(&app.comment_buffer, app.comment_cursor) {
+                end if end == app.comment_cursor => next_char_boundary(&app.comment_buffer, end),
+                end => end,
+            };
+            app.comment_buffer
+                .replace_range(app.comment_cursor..end, "");
         }
         Action::Quit => app.should_quit = true,
         _ => {}
@@ -1516,10 +1517,8 @@ pub fn handle_visual_action(app: &mut App, action: Action) {
         Action::ExitMode => app.exit_visual_mode(),
         Action::Quit => app.should_quit = true,
         Action::QuitHint => app.set_message(QUIT_HINT_MESSAGE),
-        Action::ScrollViewDown(n) | Action::MouseScrollDown(n) => app.scroll_view_down(n),
-        Action::ScrollViewUp(n) | Action::MouseScrollUp(n) => app.scroll_view_up(n),
-        Action::HalfPageDown => app.page_down(app.diff_state.viewport_height / 2),
-        Action::HalfPageUp => app.page_up(app.diff_state.viewport_height / 2),
+        Action::MouseScrollDown(n) => app.scroll_view_down(n),
+        Action::MouseScrollUp(n) => app.scroll_view_up(n),
         Action::PageDown => app.page_down(app.diff_state.viewport_height),
         Action::PageUp => app.page_up(app.diff_state.viewport_height),
         _ => {}
@@ -1545,11 +1544,14 @@ pub fn handle_file_list_action(app: &mut App, action: Action) {
         Action::FileTreeFilterExclude => app.begin_file_tree_prompt(FileTreePrompt::Exclude),
         Action::FileTreeClearInclude => app.clear_include_filter(),
         Action::FileTreeClearExclude => app.clear_exclude_filter(),
-        Action::FileTreeSearch => app.begin_file_tree_prompt(FileTreePrompt::Search),
-        // With a tree search active, n/N step file matches. Otherwise they
-        // fall through to the diff search so the shared binding still works.
         Action::SearchNext if app.file_tree_search_active() => app.file_tree_search_next(),
         Action::SearchPrev if app.file_tree_search_active() => app.file_tree_search_prev(),
+        Action::SearchNext | Action::SearchPrev => {
+            app.begin_file_tree_prompt(FileTreePrompt::Search)
+        }
+        Action::ClearSearchHighlight if app.file_tree_search_active() => {
+            app.file_filter.search = None
+        }
         Action::CursorDown(n) => app.file_list_down(n),
         Action::CursorUp(n) => app.file_list_up(n),
         Action::ScrollLeft(n) => app.file_list_state.scroll_left(n),
@@ -1678,8 +1680,6 @@ pub fn handle_diff_action(app: &mut App, action: Action) {
     match action {
         Action::CursorDown(n) => app.cursor_down(n),
         Action::CursorUp(n) => app.cursor_up(n),
-        Action::ScrollViewDown(n) => app.scroll_view_down(n),
-        Action::ScrollViewUp(n) => app.scroll_view_up(n),
         Action::ScrollLeft(n) => app.scroll_left(n),
         Action::ScrollRight(n) => app.scroll_right(n),
         Action::MouseScrollDown(n) => app.scroll_view_down(n),
@@ -1751,8 +1751,6 @@ fn handle_shared_normal_action(app: &mut App, action: Action) {
             app.show_file_list = false;
             app.focused_panel = FocusedPanel::Diff;
         }
-        Action::HalfPageDown => app.page_down(app.diff_state.viewport_height / 2),
-        Action::HalfPageUp => app.page_up(app.diff_state.viewport_height / 2),
         Action::PageDown => app.page_down(app.diff_state.viewport_height),
         Action::PageUp => app.page_up(app.diff_state.viewport_height),
         Action::GoToTop => app.jump_to_file(0),
@@ -1815,7 +1813,6 @@ fn handle_shared_normal_action(app: &mut App, action: Action) {
         }
         Action::ToggleHelp => app.toggle_help(),
         Action::EnterCommandMode => app.enter_command_mode(),
-        Action::EnterSearchMode => app.enter_search_mode(),
         Action::AddLineComment => {
             let line = app.get_line_at_cursor();
             if line.is_some() {
@@ -1832,12 +1829,13 @@ fn handle_shared_normal_action(app: &mut App, action: Action) {
         Action::EditCommentAtEnd if app.comment_vim_enabled => edit_comment_at_cursor(app, true),
         Action::ExportToClipboard => handle_export(app),
         Action::CopyCommentAtCursor => handle_copy_comment_at_cursor(app),
-        Action::SearchNext => {
+        Action::SearchNext if app.search_highlight_visible => {
             app.search_next_in_diff();
         }
-        Action::SearchPrev => {
+        Action::SearchPrev if app.search_highlight_visible => {
             app.search_prev_in_diff();
         }
+        Action::SearchNext | Action::SearchPrev => app.enter_search_mode(),
         Action::ClearSearchHighlight => app.clear_search_highlight(),
         Action::EnterVisualMode => {
             if app.get_line_at_cursor().is_some() {

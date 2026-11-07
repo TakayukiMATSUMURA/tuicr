@@ -24,6 +24,7 @@ use tuicr::handler::{
 use tuicr::input::{
     Action, map_file_tree_mode_with_q_quits, map_file_tree_prompt_mode,
     map_key_to_action_with_q_quits, map_target_filter_mode, map_theme_picker_filter_mode,
+    translate_emacs_key,
 };
 use tuicr::terminal_state::{TerminalFeatures, TerminalSession};
 use tuicr::theme::{is_syntax_theme_fallback_warning, resolve_theme_with_config};
@@ -513,27 +514,24 @@ fn main() -> anyhow::Result<()> {
             // keys, zz/ZZ, dd, {count}G, …) still schedule a redraw on the
             // next iteration even though they short-circuit past the match.
             needs_redraw = true;
-            let event = event::read()?;
+            let event = match event::read()? {
+                Event::Key(key) => Event::Key(translate_emacs_key(key)),
+                event => event,
+            };
             // Down/Up Release flips the `*_released_since_arm` flag so the
             // primed two-press file walk in single-file view requires a
             // deliberate release + press; held-key auto-repeat (Repeat
             // events) never satisfies the gate. Terminals without kitty
             // REPORT_EVENT_TYPES support never emit Release, in which case
             // `supports_keyboard_enhancement` is false and `cursor_down` /
-            // `cursor_up` never walk: j/k stop at the file's edges.
+            // `cursor_up` never walk: C-n/C-p stop at the file's edges.
             if let Event::Key(key) = &event
                 && key.kind == KeyEventKind::Release
             {
-                if matches!(
-                    key.code,
-                    crossterm::event::KeyCode::Down | crossterm::event::KeyCode::Char('j')
-                ) {
+                if key.code == crossterm::event::KeyCode::Down {
                     app.down_released_since_arm = true;
                 }
-                if matches!(
-                    key.code,
-                    crossterm::event::KeyCode::Up | crossterm::event::KeyCode::Char('k')
-                ) {
+                if key.code == crossterm::event::KeyCode::Up {
                     app.up_released_since_arm = true;
                 }
             }
@@ -816,9 +814,7 @@ fn main() -> anyhow::Result<()> {
                                         Action::CursorDown(n)
                                         | Action::CursorUp(n)
                                         | Action::ScrollLeft(n)
-                                        | Action::ScrollRight(n)
-                                        | Action::ScrollViewDown(n)
-                                        | Action::ScrollViewUp(n) => {
+                                        | Action::ScrollRight(n) => {
                                             *n = n.saturating_mul(count);
                                         }
                                         Action::NextFile

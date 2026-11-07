@@ -81,9 +81,9 @@ pub fn render_theme_picker(frame: &mut Frame, app: &mut App) {
     }
 
     let footer = if filtering {
-        "type to filter \u{00b7} \u{21b5} apply filter \u{00b7} esc cancel filter"
+        "type to filter \u{00b7} \u{21b5} apply filter \u{00b7} C-g cancel filter"
     } else {
-        "j/k move \u{00b7} \u{21b5} apply \u{00b7} / filter \u{00b7} esc cancel"
+        "C-n/C-p move \u{00b7} \u{21b5} apply \u{00b7} C-s filter \u{00b7} C-g cancel"
     };
     frame.render_widget(
         Paragraph::new(Line::from(Span::styled(

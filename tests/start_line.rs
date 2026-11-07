@@ -192,16 +192,19 @@ fn summary_dd_refreshes_selection_between_queued_inputs_and_persists_deletion() 
             .collect::<String>(),
     )
     .unwrap();
-    tmux(&socket, &["send-keys", ":e", "Enter"]);
+    tmux(&socket, &["send-keys", "M-x", "e", "Enter"]);
     wait_screen("Reloaded");
     // One batch enters Summary, selects an orphan and deletes it before another paint.
-    tmux(&socket, &["send-keys", ":summary", "Enter", "j", "d", "d"]);
+    tmux(
+        &socket,
+        &["send-keys", "M-x", "summary", "Enter", "C-n", "d", "d"],
+    );
     wait_screen("Pending Comments (2)");
     let screen = tmux(&socket, &["capture-pane", "-p"]);
     assert!(screen.contains("KEEP"));
     assert_ne!(screen.contains("ORPHAN_A"), screen.contains("ORPHAN_B"));
     // q exits Summary without terminal Escape/Alt timing ambiguity.
-    tmux(&socket, &["send-keys", "q", ":w", "Enter"]);
+    tmux(&socket, &["send-keys", "q", "M-x", "w", "Enter"]);
     wait_screen("Saved");
     let remaining = cli(&["comments", "--session", slug]);
     assert_eq!(remaining.as_array().unwrap().len(), 2);
@@ -213,10 +216,13 @@ fn summary_dd_refreshes_selection_between_queued_inputs_and_persists_deletion() 
             .any(|c| c["content"] == "KEEP")
     );
     // A modified second d must not delete anything.
-    tmux(&socket, &["send-keys", ":summary", "Enter", "d", "C-d"]);
+    tmux(
+        &socket,
+        &["send-keys", "M-x", "summary", "Enter", "d", "C-d"],
+    );
     wait_screen("Pending Comments (2)");
     // A distinct command-mode frame proves all preceding keys and the save ran.
-    tmux(&socket, &["send-keys", "q", ":w", "Enter", ":"]);
+    tmux(&socket, &["send-keys", "q", "M-x", "w", "Enter", "M-x"]);
     wait_screen("\n:");
     assert_eq!(cli(&["comments", "--session", slug]), remaining);
     tmux(
@@ -224,7 +230,7 @@ fn summary_dd_refreshes_selection_between_queued_inputs_and_persists_deletion() 
         &["send-keys", "summary", "Enter", "d", "d", "d", "d"],
     );
     wait_screen("No pending comments.");
-    tmux(&socket, &["send-keys", "q", ":w", "Enter"]);
+    tmux(&socket, &["send-keys", "q", "M-x", "w", "Enter"]);
     wait_screen("Saved");
     assert_eq!(cli(&["comments", "--session", slug]), serde_json::json!([]));
 }

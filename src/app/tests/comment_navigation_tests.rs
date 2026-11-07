@@ -337,3 +337,15 @@ fn up_moves_to_the_preceding_newline_separated_row() {
     editor.key(KeyCode::Char('!'));
     assert_eq!(editor.app.comment_buffer, "abc!\ndef");
 }
+
+#[test]
+fn kill_line_removes_to_line_end_then_the_newline() {
+    let mut editor = Editor::new(80, 24);
+    editor.type_text("abc\ndef");
+    editor.app.comment_cursor = 1;
+    handle_comment_action(&mut editor.app, crate::input::Action::KillLine);
+    assert_eq!(editor.app.comment_buffer, "a\ndef");
+    handle_comment_action(&mut editor.app, crate::input::Action::KillLine);
+    assert_eq!(editor.app.comment_buffer, "adef");
+    assert_eq!(editor.app.comment_cursor, 1);
+}
